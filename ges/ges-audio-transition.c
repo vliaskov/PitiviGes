@@ -260,11 +260,11 @@ ges_audio_transition_duration_changed (GESTrackElement * track_element,
 
   gst_timed_value_control_source_unset_all (ta);
   gst_timed_value_control_source_unset_all (tb);
-  gst_timed_value_control_source_set (ta, 0, 1.0);
+  gst_timed_value_control_source_set (ta, 0, 0.1);
   gst_timed_value_control_source_set (ta, duration, 0.0);
 
   gst_timed_value_control_source_set (tb, 0, 0.0);
-  gst_timed_value_control_source_set (tb, duration, 1.0);
+  gst_timed_value_control_source_set (tb, duration, 0.1);
 
   GST_INFO ("done updating controller");
 }

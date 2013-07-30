@@ -94,11 +94,11 @@ static GstPad *
 _request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
-  GstPad *videoconvert_srcpad, *videoconvert_sinkpad, *tmpghost;
+  GstPad *videoconvert_sinkpad, *tmpghost, *capsfilt_srcpad;
   PadInfos *infos = g_slice_new0 (PadInfos);
   GESSmartMixer *self = GES_SMART_MIXER (element);
   GstPad *ghost;
-  GstElement *videoconvert;
+  GstElement *videoconvert, *scale, *capsfilt;
 
   infos->mixer_pad = gst_element_request_pad (self->mixer,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->mixer),
@@ -113,9 +113,16 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   infos->self = self;
 
   infos->bin = gst_bin_new (NULL);
+  scale = gst_element_factory_make ("videoscale", "vs");
+  capsfilt = gst_element_factory_make ("capsfilter", "capsfilt");
   videoconvert = gst_element_factory_make ("videoconvert", NULL);
 
-  gst_bin_add (GST_BIN (infos->bin), videoconvert);
+  gst_bin_add_many (GST_BIN (infos->bin), videoconvert, scale, capsfilt, NULL);
+
+  gst_element_link_pads_full (videoconvert, "src", scale, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (scale, "src", capsfilt, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
 
   videoconvert_sinkpad = gst_element_get_static_pad (videoconvert, "sink");
   tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_sinkpad));
@@ -129,9 +136,9 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
 
-  videoconvert_srcpad = gst_element_get_static_pad (videoconvert, "src");
-  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_srcpad));
-  gst_object_unref (videoconvert_srcpad);
+  capsfilt_srcpad = gst_element_get_static_pad (capsfilt, "src");
+  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, capsfilt_srcpad));
+  gst_object_unref (capsfilt_srcpad);
   gst_pad_set_active (tmpghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
   gst_pad_link (tmpghost, infos->mixer_pad);

@@ -116,7 +116,8 @@ gboolean
 ges_generate_test_file_audio_video (const gchar * filedest,
     const gchar * audio_enc,
     const gchar * video_enc,
-    const gchar * mux, const gchar * video_pattern, const gchar * audio_wave)
+    const gchar * mux, const gchar * video_pattern, const gchar * audio_wave,
+    const guint32 width, guint height)
 {
   GError *error = NULL;
   GstElement *pipeline;
@@ -133,11 +134,12 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 
   pipeline_str = g_strdup_printf ("audiotestsrc num-buffers=430 wave=%s "
       "%c %s ! %s name=m ! filesink location= %s/%s "
-      "videotestsrc pattern=%s num-buffers=300 ! %s ! m.",
+      "videotestsrc pattern=%s num-buffers=300 ! videoscale !  video/x-raw,width=%d,height=%d ! %s ! m.",
       audio_wave,
       audio_enc ? '!' : ' ',
       audio_enc ? audio_enc : "",
-      mux, g_get_current_dir (), filedest, video_pattern, video_enc);
+      mux, g_get_current_dir (), filedest, video_pattern, width, height,
+      video_enc);
 
   pipeline = gst_parse_launch (pipeline_str, &error);
 

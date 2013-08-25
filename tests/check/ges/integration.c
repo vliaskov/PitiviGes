@@ -68,6 +68,7 @@ static gboolean seek_paused = FALSE, seek_paused_noplay = FALSE;
 /* This allow us to run the tests multiple times with different input files */
 static const gchar *testfilename1 = NULL;
 static const gchar *testfilename2 = NULL;
+static const gchar *testfilename3 = NULL;
 static const gchar *test_image_filename = NULL;
 static EncodingProfileName current_profile = PROFILE_NONE;
 
@@ -820,6 +821,7 @@ GST_START_TEST (test_##name##_raw_h264_mov)                                    \
   g_print("running test_%s_%s\n", #name, "raw_h264_mov");                      \
   testfilename1 = "assets/raw_h264.0.mov";                                     \
   testfilename2 = "assets/raw_h264.1.mov";                                     \
+  testfilename3 = "assets/raw_h264.2.mov";                                     \
   test_image_filename = "assets/png.png";                                      \
   current_profile = profile;                                                   \
   func ();                                                                     \
@@ -830,6 +832,7 @@ GST_START_TEST (test_##name##_vorbis_theora_ogv)                               \
   g_print("running test_%s_%s\n", #name, "vorbis_theora_ogv");                 \
   testfilename1 = "assets/vorbis_theora.0.ogg";                                \
   testfilename2 = "assets/vorbis_theora.1.ogg";                                \
+  testfilename3 = "assets/vorbis_theora.2.ogg";                                \
   test_image_filename = "assets/png.png";                                      \
   current_profile = profile;                                                   \
   func ();                                                                     \
@@ -840,6 +843,7 @@ GST_START_TEST (test_##name##_vorbis_vp8_webm)                                 \
   g_print("running test_%s_%s\n", #name, "vorbis_vp8_webm");                   \
   testfilename1 = "assets/vorbis_vp8.0.webm";                                  \
   testfilename2 = "assets/vorbis_vp8.1.webm";                                  \
+  testfilename3 = "assets/vorbis_vp8.2.webm";                                  \
   test_image_filename = "assets/png.png";                                      \
   current_profile = profile;                                                   \
   func ();                                                                     \
@@ -850,6 +854,7 @@ GST_START_TEST (test_##name##_mp3_h264_mov)                                    \
   g_print("running test_%s_%s\n", #name, "mp3_h264_mov");                      \
   testfilename1 = "assets/mp3_h264.0.mov";                                     \
   testfilename2 = "assets/mp3_h264.1.mov";                                     \
+  testfilename3 = "assets/mp3_h264.2.mov";                                     \
   test_image_filename = "assets/png.png";                                      \
   current_profile = profile;                                                   \
   func ();                                                                     \
@@ -1003,28 +1008,40 @@ static gboolean
 generate_all_files (void)
 {
   if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.0.webm",
-          "vorbisenc", "vp8enc", "webmmux", "18", "11"))
+          "vorbisenc", "vp8enc", "webmmux", "18", "11", 320, 240))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.1.webm",
-          "vorbisenc", "vp8enc", "webmmux", "0", "0"))
+          "vorbisenc", "vp8enc", "webmmux", "0", "0", 320, 240))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.2.webm",
+          "vorbisenc", "vp8enc", "webmmux", "0", "0", 480, 360))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/vorbis_theora.0.ogg",
-          "vorbisenc", "theoraenc", "oggmux", "18", "11"))
+          "vorbisenc", "theoraenc", "oggmux", "18", "11", 320, 240))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/vorbis_theora.1.ogg",
-          "vorbisenc", "theoraenc", "oggmux", "0", "0"))
+          "vorbisenc", "theoraenc", "oggmux", "0", "0", 320, 240))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_theora.2.ogg",
+          "vorbisenc", "theoraenc", "oggmux", "0", "0", 480, 360))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/raw_h264.0.mov", NULL,
-          "x264enc", "qtmux", "18", "11"))
+          "x264enc", "qtmux", "18", "11", 320, 240))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/raw_h264.1.mov", NULL,
-          "x264enc", "qtmux", "0", "0"))
+          "x264enc", "qtmux", "0", "0", 320, 240))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("assets/raw_h264.2.mov", NULL,
+          "x264enc", "qtmux", "0", "0", 480, 360))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/mp3_h264.0.mov",
-          "lamemp3enc", "x264enc", "qtmux", "18", "11"))
+          "lamemp3enc", "x264enc", "qtmux", "18", "11", 320, 240))
     return FALSE;
   if (!ges_generate_test_file_audio_video ("assets/mp3_h264.1.mov",
-          "lamemp3enc", "x264enc", "qtmux", "0", "0"))
+          "lamemp3enc", "x264enc", "qtmux", "0", "0", 320, 240))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("assets/mp3_h264.2.mov",
+          "lamemp3enc", "x264enc", "qtmux", "0", "0", 480, 360))
     return FALSE;
 
   return TRUE;

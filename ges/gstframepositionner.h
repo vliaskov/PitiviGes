@@ -42,6 +42,8 @@ struct _GstFramePositionner
   gint posx;
   gint posy;
   guint zorder;
+  guint width;
+  guint height;
 };
 
 struct _GstFramePositionnerClass
@@ -56,6 +58,8 @@ struct _GstFramePositionnerMeta {
   gint posx;
   gint posy;
   guint zorder;
+  guint width;
+  guint height;
 };
 
 GType gst_frame_positionner_get_type (void);

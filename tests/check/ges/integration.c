@@ -756,11 +756,11 @@ test_mix_layers (GESTimeline * timeline, GESUriClipAsset ** assets,
         switch (track_type) {
           case GES_TRACK_TYPE_VIDEO:
             ges_track_element_set_child_properties (track_element, "alpha",
-                (gdouble) (num_layers - 1 - i) * step, NULL);
+                (gdouble) (num_layers - i) * step, NULL);
             break;
           case GES_TRACK_TYPE_AUDIO:
             ges_track_element_set_child_properties (track_element, "volume",
-                (gdouble) (num_layers - 1 - i) * step, NULL);
+                (gdouble) (num_layers - i) * step, NULL);
             break;
           default:
             break;
@@ -780,7 +780,7 @@ test_mixing (void)
   GError *error = NULL;
 
   gchar *uri1 = ges_test_file_name (testfilename1);
-  gchar *uri2 = ges_test_file_name (testfilename1);
+  gchar *uri2 = ges_test_file_name (testfilename2);
 
   timeline = ges_timeline_new_audio_video ();
 
@@ -791,7 +791,7 @@ test_mixing (void)
   g_free (uri2);
 
   /* we are only using the first asset / clip for now */
-  fail_unless (test_mix_layers (timeline, asset, 1, 2));
+  fail_unless (test_mix_layers (timeline, asset, 2, 1));
 
     /**
    * Our timeline has 4 layers
@@ -974,16 +974,16 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  ADD_TESTS (basic);
+  /*ADD_TESTS (basic);
   ADD_TESTS (basic_audio);
   ADD_TESTS (basic_video);
 
   ADD_TESTS (effect);
   ADD_TESTS (transition);
+  */
+  ADD_PLAYBACK_TESTS (mixing);
 
-  ADD_TESTS (mixing);
-
-  ADD_PLAYBACK_TESTS (image);
+  /*ADD_PLAYBACK_TESTS (image);
 
   ADD_PLAYBACK_TESTS (seeking);
   ADD_PLAYBACK_TESTS (seeking_audio);
@@ -996,7 +996,7 @@ ges_suite (void)
   ADD_PLAYBACK_TESTS (seeking_paused_noplay);
   ADD_PLAYBACK_TESTS (seeking_paused_audio_noplay);
   ADD_PLAYBACK_TESTS (seeking_paused_video_noplay);
-
+  */
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
   /* TODO : might be interesting to try all profiles, and maintain a list of currently working profiles ? */
@@ -1010,6 +1010,7 @@ generate_all_files (void)
   if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.0.webm",
           "vorbisenc", "vp8enc", "webmmux", "18", "11", 320, 240))
     return FALSE;
+    
   if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.1.webm",
           "vorbisenc", "vp8enc", "webmmux", "0", "0", 320, 240))
     return FALSE;
@@ -1043,7 +1044,7 @@ generate_all_files (void)
   if (!ges_generate_test_file_audio_video ("assets/mp3_h264.2.mov",
           "lamemp3enc", "x264enc", "qtmux", "0", "0", 480, 360))
     return FALSE;
-
+  
   return TRUE;
 }
 

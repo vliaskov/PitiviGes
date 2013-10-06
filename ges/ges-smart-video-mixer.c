@@ -48,6 +48,11 @@ typedef struct _PadInfos
   gulong probe_id;
 } PadInfos;
 
+gint scale_width = 0;
+gint scale_height = 0;
+//GstCaps *scale_caps;
+//GstElement *capsfilt;
+
 static void
 destroy_pad (PadInfos * infos)
 {
@@ -67,6 +72,7 @@ destroy_pad (PadInfos * infos)
 
 /* These metadata will get set by the upstream framepositionner element,
    added in the video sources' bin */
+#include <stdio.h>
 static GstPadProbeReturn
 parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
 {
@@ -83,6 +89,7 @@ parse_metadata (GstPad * mixer_pad, GstPadProbeInfo * info, gpointer unused)
 
   g_object_set (mixer_pad, "alpha", meta->alpha, "xpos", meta->posx, "ypos",
       meta->posy, "zorder", meta->zorder, NULL);
+  printf ("%s %d %d\n", __func__, meta->width, meta->height);
 
   return GST_PAD_PROBE_OK;
 }
@@ -94,12 +101,17 @@ static GstPad *
 _request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name, const GstCaps * caps)
 {
-  GstPad *videoconvert_srcpad, *videoconvert_sinkpad, *tmpghost;
+  GstPad *videoconvert_sinkpad, *tmpghost, *capsfilt_srcpad,
+      *videoconvert_srcpad, *scale_srcpad;
   PadInfos *infos = g_slice_new0 (PadInfos);
   GESSmartMixer *self = GES_SMART_MIXER (element);
   GstPad *ghost;
   GstElement *videoconvert;
+  GstElement *scale, *capsfilt;
+  GstCaps *caps_scale;
+  gchar *capsfilter_str;
 
+  printf ("%s called\n", __func__);
   infos->mixer_pad = gst_element_request_pad (self->mixer,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->mixer),
           "sink_%u"), NULL, NULL);
@@ -109,13 +121,22 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
     return NULL;
   }
+  printf ("%s called continued\n", __func__);
 
   infos->self = self;
 
   infos->bin = gst_bin_new (NULL);
   videoconvert = gst_element_factory_make ("videoconvert", NULL);
+  scale = gst_element_factory_make ("videoscale", NULL);
+  capsfilt = gst_element_factory_make ("capsfilter", "capsfilt");
 
-  gst_bin_add (GST_BIN (infos->bin), videoconvert);
+  //gst_bin_add (GST_BIN (infos->bin), videoconvert);
+  gst_bin_add_many (GST_BIN (infos->bin), videoconvert, scale, capsfilt, NULL);
+
+  gst_element_link_pads_full (videoconvert, "src", scale, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (scale, "src", capsfilt, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
 
   videoconvert_sinkpad = gst_element_get_static_pad (videoconvert, "sink");
   tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_sinkpad));
@@ -129,9 +150,12 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   if (!gst_element_add_pad (GST_ELEMENT (self), ghost))
     goto could_not_add;
 
-  videoconvert_srcpad = gst_element_get_static_pad (videoconvert, "src");
-  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_srcpad));
-  gst_object_unref (videoconvert_srcpad);
+  //videoconvert_srcpad = gst_element_get_static_pad (videoconvert, "src");
+  //tmpghost = GST_PAD (gst_ghost_pad_new (NULL, videoconvert_srcpad));
+  //gst_object_unref (videoconvert_srcpad);
+  capsfilt_srcpad = gst_element_get_static_pad (capsfilt, "src");
+  tmpghost = GST_PAD (gst_ghost_pad_new (NULL, capsfilt_srcpad));
+  gst_object_unref (capsfilt_srcpad);
   gst_pad_set_active (tmpghost, TRUE);
   gst_element_add_pad (GST_ELEMENT (infos->bin), tmpghost);
   gst_pad_link (tmpghost, infos->mixer_pad);

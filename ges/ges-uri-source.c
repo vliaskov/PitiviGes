@@ -214,6 +214,10 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
   GstElement *topbin, *volume;
   GstElement *positionner;
   GESTimelineElement *parent;
+  GESAsset *asset;
+  gint width = 0, height = 0, tmp_width, tmp_height;
+  GstDiscovererStreamInfo *info;
+ 
 
   self = (GESUriSource *) trksrc;
   track = ges_track_element_get_track (trksrc);
@@ -239,8 +243,24 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
          properties, acting like a proxy for our smart-mixer dynamic pads. */
       positionner =
           gst_element_factory_make ("framepositionner", "frame_tagger");
+
+      asset =  ges_extractable_get_asset (GES_EXTRACTABLE (self));
+      info = ges_uri_source_asset_get_stream_info (GES_URI_SOURCE_ASSET (asset));
+
+      if (GST_IS_DISCOVERER_VIDEO_INFO (info)) {
+        tmp_width = gst_discoverer_video_info_get_width (GST_DISCOVERER_VIDEO_INFO (info));
+        tmp_height = gst_discoverer_video_info_get_height (GST_DISCOVERER_VIDEO_INFO (info));
+        if (tmp_width > width)
+          width = tmp_width;
+        if (tmp_height > height)
+          height = tmp_height;  
+      }
+      printf ("%s %d %d\n", __func__, width, height);
+      g_object_set(positionner, "width", width, NULL);
+      g_object_set(positionner, "height", height, NULL);
+      
       _add_element_properties_to_hashtable (self, positionner, "alpha", "posx",
-          "posy", NULL);
+          "posy", "width", "height", NULL);
       topbin = _create_bin ("video-src-bin", decodebin, positionner, NULL);
       parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
       if (parent) {
@@ -385,6 +405,11 @@ ges_track_filesource_class_init (GESUriSourceClass * klass)
   track_class->create_element = ges_uri_source_create_element;
   track_class->get_props_hastable = ges_uri_source_get_props_hashtable;
 }
+
+/*GstFramePositionner * ges_get_positionner (GESUriSource *self)
+{
+  return self->priv->positionner;
+}*/
 
 static void
 ges_track_filesource_init (GESUriSource * self)

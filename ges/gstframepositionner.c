@@ -42,7 +42,9 @@ enum
   PROP_ALPHA,
   PROP_POSX,
   PROP_POSY,
-  PROP_ZORDER
+  PROP_ZORDER,
+  PROP_WIDTH,
+  PROP_HEIGHT
 };
 
 static GstStaticPadTemplate gst_frame_positionner_src_template =
@@ -115,6 +117,14 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
       g_param_spec_uint ("zorder", "zorder", "z order of the stream",
           0, 10000, 0, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
+      g_param_spec_uint ("width", "width", "width of the stream",
+          0, 10000, 0, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
+      g_param_spec_uint ("height", "height", "height of the stream",
+          0, 10000, 0, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positionner", "Metadata",
       "This element provides with tagging facilities",
@@ -128,6 +138,8 @@ gst_frame_positionner_init (GstFramePositionner * framepositionner)
   framepositionner->posx = 0.0;
   framepositionner->posy = 0.0;
   framepositionner->zorder = 0;
+  framepositionner->width = 0;
+  framepositionner->height = 0;
 }
 
 void
@@ -150,6 +162,12 @@ gst_frame_positionner_set_property (GObject * object, guint property_id,
       break;
     case PROP_ZORDER:
       framepositionner->zorder = g_value_get_uint (value);
+      break;
+    case PROP_WIDTH:
+      framepositionner->width = g_value_get_uint (value);
+      break;
+    case PROP_HEIGHT:
+      framepositionner->height = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -179,6 +197,12 @@ gst_frame_positionner_get_property (GObject * object, guint property_id,
     case PROP_ZORDER:
       g_value_set_uint (value, framepositionner->zorder);
       break;
+    case PROP_WIDTH:
+      g_value_set_uint (value, framepositionner->width);
+      break;
+    case PROP_HEIGHT:
+      g_value_set_uint (value, framepositionner->height);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -189,7 +213,7 @@ GType
 gst_frame_positionner_meta_api_get_type (void)
 {
   static volatile GType type;
-  static const gchar *tags[] = { "alpha", "posx", "posy", "zorder", NULL };
+  static const gchar *tags[] = { "alpha", "posx", "posy", "zorder", "width", "height", NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstFramePositionnerApi", tags);
@@ -232,6 +256,9 @@ gst_frame_positionner_meta_transform (GstBuffer * dest, GstMeta * meta,
     dmeta->posx = smeta->posx;
     dmeta->posy = smeta->posy;
     dmeta->zorder = smeta->zorder;
+    dmeta->width = smeta->width;
+    dmeta->height = smeta->height;
+    printf("%s %d %d\n", __func__, smeta->width, smeta->height);
   }
 
   return TRUE;
@@ -257,6 +284,9 @@ gst_frame_positionner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   meta->posx = framepositionner->posx;
   meta->posy = framepositionner->posy;
   meta->zorder = framepositionner->zorder;
+  meta->width = framepositionner->width;
+  meta->height = framepositionner->height;
+  printf("%s %d %d\n", __func__, meta->width, meta->height);
   GST_OBJECT_UNLOCK (framepositionner);
 
   return GST_FLOW_OK;
